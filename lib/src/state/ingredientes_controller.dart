@@ -54,6 +54,43 @@ class IngredientesController extends ChangeNotifier {
     _guardar(nombre);
     return true;
   }
+  /// Cambia el nombre de un ingrediente.
+/// Devuelve null si salió bien, o el mensaje de error de validación.
+String? editar(String actual, String nuevoTexto) {
+  final limpio = nuevoTexto.trim();
+  if (limpio.isEmpty) return 'Escribí un nombre';
+
+  final nombre = limpio[0].toUpperCase() + limpio.substring(1);
+
+  final cambioDeNombre = nombre.toLowerCase() != actual.toLowerCase();
+  if (cambioDeNombre && contiene(nombre)) {
+    return '"$nombre" ya está en tu lista';
+  }
+
+  final i = _items.indexOf(actual);
+  if (i == -1) return 'No se encontró el ingrediente';
+  if (nombre == actual) return null;
+
+  _items[i] = nombre;
+  notifyListeners();
+
+  _actualizar(actual, nombre);
+  return null;
+}
+
+Future<void> _actualizar(String viejo, String nuevo) async {
+  try {
+    await _db
+        .from('ingredientes')
+        .update({'nombre': nuevo})
+        .eq('nombre', viejo);
+  } catch (e) {
+    debugPrint('Error al editar "$viejo": $e');
+    final i = _items.indexOf(nuevo);
+    if (i != -1) _items[i] = viejo; // deshace el cambio local
+    notifyListeners();
+  }
+}
 
   /// Analiza la foto con IA y agrega los ingredientes detectados.
   /// Devuelve cuántos ingredientes nuevos se agregaron.

@@ -21,6 +21,51 @@ void mostrarListaIngredientes(
   );
 }
 
+/// Diálogo para modificar el nombre de un ingrediente.
+Future<void> _editarIngrediente(
+  BuildContext context,
+  IngredientesController controller,
+  String actual,
+) async {
+  final texto = TextEditingController(text: actual);
+  String? error;
+
+  await showDialog(
+    context: context,
+    builder: (ctx) => StatefulBuilder(
+      builder: (ctx, setState) => AlertDialog(
+        title: const Text('Editar ingrediente'),
+        content: TextField(
+          controller: texto,
+          autofocus: true,
+          textCapitalization: TextCapitalization.sentences,
+          decoration: InputDecoration(
+            labelText: 'Nombre del ingrediente',
+            errorText: error,
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancelar'),
+          ),
+          TextButton(
+            onPressed: () {
+              final e = controller.editar(actual, texto.text);
+              if (e == null) {
+                Navigator.pop(ctx);
+              } else {
+                setState(() => error = e);
+              }
+            },
+            child: const Text('Guardar'),
+          ),
+        ],
+      ),
+    ),
+  );
+}
+
 class _ListaIngredientes extends StatelessWidget {
   final IngredientesController controller;
 
@@ -115,6 +160,14 @@ class _ListaIngredientes extends StatelessWidget {
                               ),
                             ),
                             IconButton(
+                              tooltip: 'Editar',
+                              icon: const Icon(Icons.edit_outlined,
+                                  size: 20, color: AppColors.textGrey),
+                              onPressed: () => _editarIngrediente(
+                                  context, controller, ingrediente),
+                            ),
+                            IconButton(
+                              tooltip: 'Eliminar',
                               icon: const Icon(Icons.close,
                                   size: 20, color: AppColors.textGrey),
                               onPressed: () =>
